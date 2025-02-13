@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shooting Game</title>
+    <style>
+        canvas {
+            border: 1px solid black;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="800" height="600"></canvas>
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Shooter object
+        const shooter = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            width: 50,
+            height: 20,
+            dx: 5
+        };
+
+        // Bullet object
+        const bullet = {
+            x: canvas.width / 2,
+            y: canvas.height - 30,
+            width: 5,
+            height: 10,
+            dy: -7,
+            fired: false
+        };
+
+        // Targets array
+        const targets = [];
+
+        // Create initial targets
+        function createTargets() {
+            for (let i = 0; i < 5; i++) {
+                targets.push({
+                    x: Math.random() * (canvas.width - 50),
+                    y: Math.random() * 200,
+                    width: 50,
+                    height: 50,
+                    dx: 3
+                });
+            }
+        }
+
+        // Draw shooter
+        function drawShooter() {
+            ctx.fillStyle = 'blue';
+            ctx.fillRect(shooter.x, shooter.y, shooter.width, shooter.height);
+        }
+
+        // Draw bullet
+        function drawBullet() {
+            if (bullet.fired) {
+                ctx.fillStyle = 'red';
+                ctx.fillRect(bullet.x, bullet.y, bullet.width, bullet.height);
+            }
+        }
+
+        // Draw targets
+        function drawTargets() {
+            ctx.fillStyle = 'green';
+            targets.forEach(target => {
+                ctx.fillRect(target.x, target.y, target.width, target.height);
+            });
+        }
+
+        // Move shooter
+        function moveShooter(mouseX) {
+            shooter.x = mouseX - shooter.width / 2;
+        }
+
+        // Move bullet
+        function moveBullet() {
+            if (bullet.fired) {
+                bullet.y += bullet.dy;
+                if (bullet.y < 0) {
+                    bullet.fired = false;
+                    bullet.y = shooter.y;
+                }
+            }
+        }
+
+        // Move targets
+        function moveTargets() {
+            targets.forEach(target => {
+                target.x += target.dx;
+                if (target.x < 0 || target.x + target.width > canvas.width) {
+                    target.dx = -target.dx;
+                }
+            });
+        }
+
+        // Check for collisions
+        function checkCollision() {
+            targets.forEach((target, index) => {
+                if (bullet.fired &&
+                    bullet.x < target.x + target.width &&
+                    bullet.x + bullet.width > target.x &&
+                    bullet.y < target.y + target.height &&
+                    bullet.y + bullet.height > target.y) {
+                        bullet.fired = false;
+                        bullet.y = shooter.y;
+                        targets.splice(index, 1); // Remove the target
+                }
+            });
+        }
+
+        // Handle mouse movements
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            moveShooter(mouseX);
+        });
+
+        // Handle mouse clicks
+        canvas.addEventListener('click', () => {
+            if (!bullet.fired) {
+                bullet.fired = true;
+                bullet.x = shooter.x + shooter.width / 2 - bullet.width / 2;
+            }
+        });
+
+        // Game loop
+        function gameLoop() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawShooter();
+            drawBullet();
+            drawTargets();
+            moveBullet();
+            moveTargets();
+            checkCollision();
+            requestAnimationFrame(gameLoop);
+        }
+
+        createTargets();
+        gameLoop();
+    </script>
+</body>
+</html>
